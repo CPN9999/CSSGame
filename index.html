@@ -96,9 +96,9 @@
         position.
       </p>
       <p class="dummy-text">
-        Khi dùng <code>relative</code>, hình xanh sẽ di chuyển mà KHÔNG đẩy văn
-        bản xuống dưới. Khi dùng <code>absolute</code>, nó sẽ chồng lên văn bản.
-        Khi dùng <code>fixed</code>, nó sẽ cố định theo toàn màn hình.
+        Khi dùng <code>relative</code>, hình xanh sẽ di chuyển mà vị trí cũ vẫn
+        giữ nguyên. Khi dùng <code>absolute</code>, nó sẽ chồng lên văn bản. Khi
+        dùng <code>fixed</code>, nó sẽ cố định theo toàn màn hình.
       </p>
       <p class="dummy-text">Thử nghiệm để cảm nhận sự khác biệt nhé!</p>
     </div>
@@ -228,7 +228,7 @@
 
           checkOverlap();
         } catch {
-          message.textContent = "❌ Sai cú pháp CSS!";
+          message.textContent = "Sai cú pháp CSS!";
         }
       });
 
