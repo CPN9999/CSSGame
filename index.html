@@ -14,13 +14,14 @@
       }
 
       #viewport {
-        position: relative; /* chứa hai hình */
+        position: relative;
         width: 500px;
         height: 300px;
         background: #111;
         border: 2px solid #555;
         margin: 20px auto;
         overflow: hidden;
+        padding: 10px;
       }
 
       .rect {
@@ -74,6 +75,13 @@
         margin-top: 10px;
         color: #ffcc00;
       }
+
+      .dummy-text {
+        color: #aaa;
+        font-size: 14px;
+        text-align: left;
+        margin-top: 5px;
+      }
     </style>
   </head>
   <body>
@@ -83,14 +91,24 @@
     <div id="viewport">
       <div id="orange" class="rect"></div>
       <div id="blue" class="rect"></div>
+      <p class="dummy-text">
+        Đây là một đoạn văn bản để bạn thấy được sự khác biệt giữa các kiểu
+        position.
+      </p>
+      <p class="dummy-text">
+        Khi dùng <code>relative</code>, hình xanh sẽ di chuyển mà KHÔNG đẩy văn
+        bản xuống dưới. Khi dùng <code>absolute</code>, nó sẽ chồng lên văn bản.
+        Khi dùng <code>fixed</code>, nó sẽ cố định theo toàn màn hình.
+      </p>
+      <p class="dummy-text">Thử nghiệm để cảm nhận sự khác biệt nhé!</p>
     </div>
 
     <div id="inputArea">
       <textarea
         id="cssInput"
         placeholder="Type your CSS here...&#10;e.g. position: absolute; top: 50px; left: 50px; width: 100px; height: 100px;"
-      ></textarea
-      ><br />
+      ></textarea>
+      <br />
       <div style="margin-left: auto; color: #aaa; font-size: 13px">
         Tip: press Ctrl/⌘ + Enter to apply
       </div>
@@ -110,6 +128,8 @@
 
       const keywords = ["absolute", "relative", "fixed"];
       let currentKeyword = "static";
+      let blueBaseTop = 0;
+      let blueBaseLeft = 0;
 
       function getRandomInt(min, max) {
         return Math.round(Math.random() * (max - min) + min);
@@ -128,6 +148,8 @@
           left: left + "px",
           top: top + "px",
         });
+
+        // Reset lại hình xanh
         Object.assign(blue.style, {
           position: "static",
           width: "50px",
@@ -138,16 +160,22 @@
         message.textContent = "";
         currentKeyword = keywords[Math.floor(Math.random() * keywords.length)];
         keywordBox.innerHTML = `Keyword bắt buộc: <strong>${currentKeyword}</strong>`;
+
+        // Ghi lại vị trí ban đầu của blue trong viewport
+        const rect = blue.getBoundingClientRect();
+        const viewportRect = viewport.getBoundingClientRect();
+        blueBaseLeft = rect.left - viewportRect.left;
+        blueBaseTop = rect.top - viewportRect.top;
       }
 
       function checkOverlap() {
         const oRect = orange.getBoundingClientRect();
         const bRect = blue.getBoundingClientRect();
         if (
-          bRect.left === oRect.left &&
-          bRect.top === oRect.top &&
-          bRect.right === oRect.right &&
-          bRect.bottom === oRect.bottom
+          Math.abs(bRect.left - oRect.left) < 1 &&
+          Math.abs(bRect.top - oRect.top) < 1 &&
+          Math.abs(bRect.right - oRect.right) < 1 &&
+          Math.abs(bRect.bottom - oRect.bottom) < 1
         ) {
           message.textContent = "🎉 Good job!";
           setTimeout(randomizeOrange, 1500);
@@ -156,7 +184,6 @@
 
       goBtn.addEventListener("click", () => {
         const cssText = input.value.trim();
-
         try {
           const tempStyle = {};
           cssText.split(";").forEach((rule) => {
@@ -165,25 +192,43 @@
             if (prop && val) tempStyle[prop.trim()] = val.trim();
           });
 
-          // Nếu không có hoặc sai keyword thì không áp dụng
           if (!tempStyle.position || tempStyle.position !== currentKeyword) {
-            message.textContent = `Bạn phải dùng position: ${currentKeyword}!`;
+            message.textContent = `⚠️ Bạn phải dùng position: ${currentKeyword}!`;
             return;
           }
 
-          //  Nếu người chơi nhập "fixed", thì mô phỏng lại bằng absolute
-          const finalPosition =
-            tempStyle.position === "fixed" ? "absolute" : tempStyle.position;
+          // Reset style
+          blue.removeAttribute("style");
+          blue.className = "rect";
 
-          blue.style.position = finalPosition;
-
-          for (const [prop, val] of Object.entries(tempStyle)) {
-            if (prop !== "position") blue.style[prop] = val;
+          // Nếu là relative → hành xử như absolute nhưng vẫn cho pass
+          if (tempStyle.position === "relative") {
+            blue.style.position = "relative";
+            for (const [prop, val] of Object.entries(tempStyle)) {
+              if (prop !== "position") blue.style[prop] = val;
+            }
+            const top = parseFloat(tempStyle.top) || 0;
+            const left = parseFloat(tempStyle.left) || 0;
+            //blue.style.top = blueBaseTop + top + "px";
+            //blue.style.left = blueBaseLeft + left + "px";
+          } else if (tempStyle.position === "absolute") {
+            blue.style.position = "absolute";
+            for (const [prop, val] of Object.entries(tempStyle)) {
+              if (prop !== "position") blue.style[prop] = val;
+            }
+          } else if (tempStyle.position === "fixed") {
+            // "fixed" vẫn bị giới hạn trong viewport, không ra ngoài
+            blue.style.position = "absolute";
+            for (const [prop, val] of Object.entries(tempStyle)) {
+              if (prop !== "position") blue.style[prop] = val;
+            }
           }
+
+          if (!viewport.contains(blue)) viewport.appendChild(blue);
 
           checkOverlap();
         } catch {
-          message.textContent = "Sai cú pháp CSS!";
+          message.textContent = "❌ Sai cú pháp CSS!";
         }
       });
 
