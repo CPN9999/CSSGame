@@ -14,7 +14,7 @@
       }
 
       #viewport {
-        position: relative;
+        position: relative; /* chứa hai hình */
         width: 500px;
         height: 300px;
         background: #111;
@@ -24,11 +24,13 @@
       }
 
       .rect {
-        position: absolute;
+        width: 50px;
+        height: 50px;
       }
 
       #orange {
         background: orange;
+        position: absolute;
       }
 
       #blue {
@@ -104,6 +106,7 @@
       const input = document.getElementById("cssInput");
       const message = document.getElementById("message");
       const keywordBox = document.getElementById("keyword");
+      const goBtn = document.getElementById("goBtn");
 
       const keywords = ["absolute", "relative", "fixed"];
       let currentKeyword = "static";
@@ -141,47 +144,47 @@
         const oRect = orange.getBoundingClientRect();
         const bRect = blue.getBoundingClientRect();
         if (
-          bRect.left == oRect.left &&
-          bRect.top == oRect.top &&
-          bRect.right == oRect.right &&
-          bRect.bottom == oRect.bottom
+          bRect.left === oRect.left &&
+          bRect.top === oRect.top &&
+          bRect.right === oRect.right &&
+          bRect.bottom === oRect.bottom
         ) {
           message.textContent = "🎉 Good job!";
           setTimeout(randomizeOrange, 1500);
         }
       }
 
-      document.getElementById("goBtn").addEventListener("click", () => {
+      goBtn.addEventListener("click", () => {
         const cssText = input.value.trim();
-        if (!cssText) return;
 
-        // Tách rule trước nhưng CHƯA áp dụng
-        const newStyles = {};
         try {
+          const tempStyle = {};
           cssText.split(";").forEach((rule) => {
             if (!rule.trim()) return;
             const [prop, val] = rule.split(":");
-            if (prop && val) newStyles[prop.trim()] = val.trim();
+            if (prop && val) tempStyle[prop.trim()] = val.trim();
           });
+
+          // Nếu không có hoặc sai keyword thì không áp dụng
+          if (!tempStyle.position || tempStyle.position !== currentKeyword) {
+            message.textContent = `Bạn phải dùng position: ${currentKeyword}!`;
+            return;
+          }
+
+          //  Nếu người chơi nhập "fixed", thì mô phỏng lại bằng absolute
+          const finalPosition =
+            tempStyle.position === "fixed" ? "absolute" : tempStyle.position;
+
+          blue.style.position = finalPosition;
+
+          for (const [prop, val] of Object.entries(tempStyle)) {
+            if (prop !== "position") blue.style[prop] = val;
+          }
+
+          checkOverlap();
         } catch {
-          alert("Sai cú pháp CSS!");
-          return;
+          message.textContent = "Sai cú pháp CSS!";
         }
-
-        // Kiểm tra keyword trước khi áp dụng
-        if (newStyles["position"] !== currentKeyword) {
-          message.textContent = `Bạn phải dùng position: ${currentKeyword}!`;
-          return; // DỪNG - không áp dụng gì
-        }
-
-        // Nếu đúng keyword → áp dụng CSS
-        blue.style = ""; // reset inline CSS
-        blue.className = "rect";
-        for (const prop in newStyles) {
-          blue.style[prop] = newStyles[prop];
-        }
-
-        checkOverlap();
       });
 
       input.addEventListener("keydown", (e) => {
