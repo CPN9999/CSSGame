@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Position Game</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background: #222;
+        color: #fff;
+        text-align: center;
+        padding-top: 20px;
+      }
+
+      #viewport {
+        position: relative;
+        width: 500px;
+        height: 300px;
+        background: #111;
+        border: 2px solid #555;
+        margin: 20px auto;
+        overflow: hidden;
+      }
+
+      .rect {
+        position: absolute;
+      }
+
+      #orange {
+        background: orange;
+      }
+
+      #blue {
+        background: dodgerblue;
+        position: static;
+      }
+
+      #inputArea {
+        width: 500px;
+        margin: 10px auto;
+      }
+
+      #cssInput {
+        width: 100%;
+        height: 80px;
+        font-family: monospace;
+        font-size: 14px;
+        border: none;
+        border-radius: 6px;
+        padding: 10px;
+      }
+
+      #goBtn {
+        margin-top: 8px;
+        padding: 8px 16px;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        background: limegreen;
+        color: white;
+      }
+
+      #message {
+        margin-top: 15px;
+        font-size: 20px;
+      }
+
+      #keyword {
+        font-size: 18px;
+        margin-top: 10px;
+        color: #ffcc00;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Làm cho hình xanh che hết hình cam bằng CSS!</h2>
+    <div id="keyword">Keyword bắt buộc: <strong>static</strong></div>
+
+    <div id="viewport">
+      <div id="orange" class="rect"></div>
+      <div id="blue" class="rect"></div>
+    </div>
+
+    <div id="inputArea">
+      <textarea
+        id="cssInput"
+        placeholder="Type your CSS here...&#10;e.g. position: absolute; top: 50px; left: 50px; width: 100px; height: 100px;"
+      ></textarea
+      ><br />
+      <div style="margin-left: auto; color: #aaa; font-size: 13px">
+        Tip: press Ctrl/⌘ + Enter to apply
+      </div>
+      <button id="goBtn">Go</button>
+    </div>
+
+    <div id="message"></div>
+
+    <script>
+      const viewport = document.getElementById("viewport");
+      const orange = document.getElementById("orange");
+      const blue = document.getElementById("blue");
+      const input = document.getElementById("cssInput");
+      const message = document.getElementById("message");
+      const keywordBox = document.getElementById("keyword");
+
+      const keywords = ["absolute", "relative", "fixed"];
+      let currentKeyword = "static";
+
+      function getRandomInt(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+      }
+
+      function randomizeOrange() {
+        const maxW = 200,
+          maxH = 150;
+        const w = getRandomInt(50, maxW);
+        const h = getRandomInt(50, maxH);
+        const left = getRandomInt(0, viewport.clientWidth - w);
+        const top = getRandomInt(0, viewport.clientHeight - h);
+        Object.assign(orange.style, {
+          width: w + "px",
+          height: h + "px",
+          left: left + "px",
+          top: top + "px",
+        });
+        Object.assign(blue.style, {
+          position: "static",
+          width: "50px",
+          height: "50px",
+          left: "",
+          top: "",
+        });
+        message.textContent = "";
+        currentKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+        keywordBox.innerHTML = `Keyword bắt buộc: <strong>${currentKeyword}</strong>`;
+      }
+
+      function checkOverlap() {
+        const oRect = orange.getBoundingClientRect();
+        const bRect = blue.getBoundingClientRect();
+        if (
+          bRect.left == oRect.left &&
+          bRect.top == oRect.top &&
+          bRect.right == oRect.right &&
+          bRect.bottom == oRect.bottom
+        ) {
+          message.textContent = "🎉 Good job!";
+          setTimeout(randomizeOrange, 1500);
+        }
+      }
+
+      document.getElementById("goBtn").addEventListener("click", () => {
+        const cssText = input.value.trim();
+        if (!cssText) return;
+
+        // Tách rule trước nhưng CHƯA áp dụng
+        const newStyles = {};
+        try {
+          cssText.split(";").forEach((rule) => {
+            if (!rule.trim()) return;
+            const [prop, val] = rule.split(":");
+            if (prop && val) newStyles[prop.trim()] = val.trim();
+          });
+        } catch {
+          alert("Sai cú pháp CSS!");
+          return;
+        }
+
+        // Kiểm tra keyword trước khi áp dụng
+        if (newStyles["position"] !== currentKeyword) {
+          message.textContent = `Bạn phải dùng position: ${currentKeyword}!`;
+          return; // DỪNG - không áp dụng gì
+        }
+
+        // Nếu đúng keyword → áp dụng CSS
+        blue.style = ""; // reset inline CSS
+        blue.className = "rect";
+        for (const prop in newStyles) {
+          blue.style[prop] = newStyles[prop];
+        }
+
+        checkOverlap();
+      });
+
+      input.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          goBtn.click();
+        }
+      });
+
+      randomizeOrange();
+    </script>
+  </body>
+</html>
