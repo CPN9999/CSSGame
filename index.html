@@ -218,7 +218,7 @@
             }
           } else if (tempStyle.position === "fixed") {
             // "fixed" vẫn bị giới hạn trong viewport, không ra ngoài
-            blue.style.position = "absolute";
+            blue.style.position = "fixed";
             for (const [prop, val] of Object.entries(tempStyle)) {
               if (prop !== "position") blue.style[prop] = val;
             }
